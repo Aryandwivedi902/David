@@ -1,0 +1,78 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Room {
+  id          String        @id @default(uuid())
+  name        String
+  slug        String        @unique
+  description String
+  price       Decimal       @db.Decimal(10, 2)
+  capacity    Int
+  bedType     String
+  size        Int           // in square meters
+  imageUrl    String
+  available   Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  amenities   RoomAmenity[]
+  bookings    Booking[]
+
+  @@map("rooms")
+}
+
+model RoomAmenity {
+  id        String   @id @default(uuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  amenity   String
+  createdAt DateTime @default(now())
+
+  @@map("room_amenities")
+}
+
+model Booking {
+  id             String   @id @default(uuid())
+  roomId         String
+  room           Room     @relation(fields: [roomId], references: [id])
+  guestName      String
+  email          String
+  phone          String
+  guests         Int
+  checkIn        DateTime
+  checkOut       DateTime
+  totalAmount    Decimal  @db.Decimal(10, 2)
+  status         String   @default("pending") // pending, confirmed, cancelled, completed
+  specialRequest String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("bookings")
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("contacts")
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admins")
+}
