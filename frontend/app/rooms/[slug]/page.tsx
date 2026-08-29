@@ -200,7 +200,7 @@ export default function RoomDetailsPage() {
             <div className="border-b border-white/5 pb-6 mb-6">
               <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase font-sans">NIGHTLY RATE</span>
               <div className="text-3xl font-bold text-accent font-serif mt-1">
-                ${roomPrice.toLocaleString()} <span className="text-xs font-normal text-gray-400 font-sans">/ NIGHT</span>
+                ₹{roomPrice.toLocaleString()} <span className="text-xs font-normal text-gray-400 font-sans">/ NIGHT</span>
               </div>
             </div>
 
@@ -252,7 +252,7 @@ export default function RoomDetailsPage() {
                 <div className="bg-white/5 border border-white/5 p-4 space-y-2 text-xs font-semibold tracking-wider font-sans">
                   <div className="flex justify-between text-gray-400">
                     <span>RATE PER NIGHT:</span>
-                    <span>${roomPrice.toLocaleString()}</span>
+                    <span>₹{roomPrice.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-gray-400">
                     <span>DURATION:</span>
@@ -260,7 +260,7 @@ export default function RoomDetailsPage() {
                   </div>
                   <div className="flex justify-between text-accent border-t border-white/5 pt-2 text-sm font-bold">
                     <span>ESTIMATED TOTAL:</span>
-                    <span>${totalPrice.toLocaleString()}</span>
+                    <span>₹{totalPrice.toLocaleString()}</span>
                   </div>
                 </div>
               )}

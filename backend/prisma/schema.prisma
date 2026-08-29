@@ -37,20 +37,24 @@ model RoomAmenity {
 }
 
 model Booking {
-  id             String   @id @default(uuid())
-  roomId         String
-  room           Room     @relation(fields: [roomId], references: [id])
-  guestName      String
-  email          String
-  phone          String
-  guests         Int
-  checkIn        DateTime
-  checkOut       DateTime
-  totalAmount    Decimal  @db.Decimal(10, 2)
-  status         String   @default("pending") // pending, confirmed, cancelled, completed
-  specialRequest String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String   @id @default(uuid())
+  roomId           String
+  room             Room     @relation(fields: [roomId], references: [id])
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id])
+  guestName        String
+  email            String
+  phone            String
+  guests           Int
+  checkIn          DateTime
+  checkOut         DateTime
+  totalAmount      Decimal  @db.Decimal(10, 2)
+  status           String   @default("pending") // pending, confirmed, cancelled, completed
+  specialRequest   String?
+  paymentMethod    String   @default("unpaid")
+  paymentReference String   @default("none")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@map("bookings")
 }
@@ -76,3 +80,16 @@ model Admin {
 
   @@map("admins")
 }
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  bookings     Booking[]
+
+  @@map("users")
+}
+

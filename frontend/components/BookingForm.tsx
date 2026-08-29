@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, Users, Phone, Mail, User } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 interface BookingFormProps {
   onSubmit: (data: any) => void;
@@ -10,6 +11,7 @@ interface BookingFormProps {
 }
 
 export default function BookingForm({ onSubmit, loading, maxGuests = 4 }: BookingFormProps) {
+  const { user } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -18,9 +20,17 @@ export default function BookingForm({ onSubmit, loading, maxGuests = 4 }: Bookin
   const [checkOut, setCheckOut] = useState("");
   const [request, setRequest] = useState("");
 
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+    }
+  }, [user]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
+      userId: user?.id || null,
       guestName: name,
       email,
       phone,

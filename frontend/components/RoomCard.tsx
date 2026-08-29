@@ -39,7 +39,7 @@ export default function RoomCard({ room }: { room: RoomData }) {
         
         {/* Price Tag Overlay */}
         <div className="absolute top-4 right-4 bg-navy-deep/90 border border-accent/20 px-3 py-1.5 text-xs font-semibold tracking-widest text-accent font-sans">
-          ${formattedPrice} <span className="text-gray-400 font-normal">/ NIGHT</span>
+          ₹{formattedPrice} <span className="text-gray-400 font-normal">/ NIGHT</span>
         </div>
       </div>
 

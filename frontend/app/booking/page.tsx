@@ -2,7 +2,8 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Compass, CheckCircle2, AlertCircle, Info, Calendar } from "lucide-react";
+import { Compass, CheckCircle2, AlertCircle, Info, Calendar, Loader2 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 interface RoomOption {
   id: string;
@@ -14,6 +15,7 @@ interface RoomOption {
 function BookingFormContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user, token } = useAuth();
 
   // Parse query params
   const paramRoomId = searchParams.get("room") || "";
@@ -39,6 +41,24 @@ function BookingFormContent() {
     type: "idle" | "error";
     message: string;
   }>({ type: "idle", message: "" });
+
+  // Payment states
+  const [paymentMethod, setPaymentMethod] = useState<"" | "upi" | "bank">("");
+  const [upiId, setUpiId] = useState("");
+  const [accountNo, setAccountNo] = useState("");
+  const [ifsc, setIfsc] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentHighlightError, setPaymentHighlightError] = useState(false);
+
+  // Auto-fill user details if logged in
+  useEffect(() => {
+    if (user) {
+      setGuestName(user.name);
+      setEmail(user.email);
+    }
+  }, [user]);
 
   // Load rooms for selection dropdown
   useEffect(() => {
@@ -113,15 +133,34 @@ function BookingFormContent() {
       return;
     }
 
+    // Payment validation
+    if (!paymentMethod) {
+      setPaymentHighlightError(true);
+      setStatus({ type: "error", message: "Please select a payment method (UPI or Direct Bank Transfer)." });
+      return;
+    }
+
+    if (!paymentVerified) {
+      setPaymentHighlightError(true);
+      setStatus({ type: "error", message: "Please complete your payment of ₹" + totalCost.toLocaleString() + " using the Pay button." });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${apiBase}/bookings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           roomId: selectedRoom.id,
+          userId: user?.id || null,
           guestName,
           email,
           phone,
@@ -129,6 +168,8 @@ function BookingFormContent() {
           checkIn: checkInDate,
           checkOut: checkOutDate,
           specialRequest,
+          paymentMethod,
+          paymentReference,
         }),
       });
 
@@ -235,7 +276,7 @@ function BookingFormContent() {
                 >
                   {rooms.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.name} - ${parseFloat(r.price).toLocaleString()}/night
+                      {r.name} - ₹{parseFloat(r.price).toLocaleString()}/night
                     </option>
                   ))}
                 </select>
@@ -303,6 +344,169 @@ function BookingFormContent() {
             />
           </div>
 
+          {/* Payment Section */}
+          <h2 className="text-xl font-bold font-serif uppercase tracking-wider text-white border-b border-white/5 pb-4 pt-4">
+            Payment Details
+          </h2>
+
+          <div 
+            className={`p-6 border transition-all duration-300 ${
+              paymentHighlightError 
+                ? "border-rose-500 bg-rose-500/5 animate-pulse" 
+                : "border-white/10 bg-navy-deep/40"
+            }`}
+          >
+            <div className="space-y-4">
+              <label className="text-xs font-semibold tracking-wider text-gray-300 uppercase block">
+                Select Payment Method
+              </label>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentMethod("upi");
+                    setPaymentHighlightError(false);
+                  }}
+                  className={`py-3 text-xs font-bold tracking-widest uppercase transition-all border rounded-none ${
+                    paymentMethod === "upi"
+                      ? "bg-gradient-gold text-navy-deep border-accent"
+                      : "bg-navy-deep text-white border-white/10 hover:border-white/30"
+                  }`}
+                >
+                  UPI (GPay / PhonePe / Paytm)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentMethod("bank");
+                    setPaymentHighlightError(false);
+                  }}
+                  className={`py-3 text-xs font-bold tracking-widest uppercase transition-all border rounded-none ${
+                    paymentMethod === "bank"
+                      ? "bg-gradient-gold text-navy-deep border-accent"
+                      : "bg-navy-deep text-white border-white/10 hover:border-white/30"
+                  }`}
+                >
+                  Direct Bank Transfer
+                </button>
+              </div>
+
+              {/* UPI Fields */}
+              {paymentMethod === "upi" && (
+                <div className="space-y-4 pt-3 border-t border-white/5">
+                  <div className="flex flex-col items-center justify-center bg-navy-deep/60 p-4 border border-white/5 space-y-4">
+                    <span className="text-[10px] font-bold text-accent tracking-widest uppercase">
+                      Scan to Pay (Aryan Dwivedi)
+                    </span>
+                    <div className="relative w-48 h-80 border border-white/10 bg-black/40 overflow-hidden flex items-center justify-center p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src="/upi-qr.jpg" 
+                        alt="UPI Payment QR Code" 
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[11px] text-white font-mono font-bold tracking-wide">
+                        UPI ID: 9368945883@fam
+                      </p>
+                      <p className="text-[9px] text-gray-400 mt-1 uppercase tracking-wider">
+                        Scan with GPay, PhonePe, Paytm, or any UPI app
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase">
+                      Your UPI ID (For Verification)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={upiId}
+                      onChange={(e) => setUpiId(e.target.value)}
+                      placeholder="e.g. yourname@upi"
+                      className="w-full bg-navy-deep border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent rounded-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Bank Fields */}
+              {paymentMethod === "bank" && (
+                <div className="space-y-4 pt-3 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase">
+                      Account Number
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={accountNo}
+                      onChange={(e) => setAccountNo(e.target.value)}
+                      placeholder="e.g. 50100412345678"
+                      className="w-full bg-navy-deep border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent rounded-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-semibold text-gray-400 tracking-widest uppercase font-sans">
+                      IFSC CODE
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={ifsc}
+                      onChange={(e) => setIfsc(e.target.value)}
+                      placeholder="e.g. HDFC0001234"
+                      className="w-full bg-navy-deep border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent rounded-none font-sans"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Simulated Pay Trigger */}
+              {paymentMethod && !paymentVerified && (
+                <div className="pt-4">
+                  <button
+                    type="button"
+                    disabled={paymentLoading || (paymentMethod === "upi" ? !upiId : (!accountNo || !ifsc))}
+                    onClick={async () => {
+                      setPaymentLoading(true);
+                      await new Promise((resolve) => setTimeout(resolve, 2000));
+                      const fakeRef = `TXN${Math.floor(10000000 + Math.random() * 90000000)}`;
+                      setPaymentReference(fakeRef);
+                      setPaymentVerified(true);
+                      setPaymentLoading(false);
+                    }}
+                    className="w-full py-4 bg-gradient-gold text-navy-deep font-semibold text-xs tracking-widest border border-accent hover:bg-transparent hover:text-white hover:border-white transition-all duration-500 uppercase flex items-center justify-center gap-2 rounded-none"
+                  >
+                    {paymentLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        PROCESSING TRANSACTION...
+                      </>
+                    ) : (
+                      `PAY ₹${totalCost.toLocaleString()}`
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Payment Success Confirmation Indicator */}
+              {paymentVerified && (
+                <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block">Payment Verified Successfully</span>
+                    <span className="text-[10px] text-gray-400">Ref ID: {paymentReference}</span>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+
           {/* Submission status feedback */}
           {status.type === "error" && (
             <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-3">
@@ -337,7 +541,7 @@ function BookingFormContent() {
 
               <div>
                 <span className="text-[10px] text-gray-400 font-semibold uppercase">NIGHTLY RATE:</span>
-                <div className="text-sm text-accent font-semibold mt-0.5">${parseFloat(selectedRoom.price).toLocaleString()}</div>
+                <div className="text-sm text-accent font-semibold mt-0.5">₹{parseFloat(selectedRoom.price).toLocaleString()}</div>
               </div>
 
               {nights > 0 && (
@@ -352,7 +556,7 @@ function BookingFormContent() {
                   </div>
                   <div className="flex justify-between text-white font-bold text-sm border-t border-white/5 pt-3">
                     <span>TOTAL AMOUNT:</span>
-                    <span className="text-accent">${totalCost.toLocaleString()}</span>
+                    <span className="text-accent">₹{totalCost.toLocaleString()}</span>
                   </div>
                 </div>
               )}

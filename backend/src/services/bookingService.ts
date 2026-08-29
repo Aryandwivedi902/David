@@ -5,6 +5,7 @@ export class BookingService {
   // Create a reservation booking
   static async createBooking(data: {
     roomId: string;
+    userId?: string | null;
     guestName: string;
     email: string;
     phone: string;
@@ -12,6 +13,8 @@ export class BookingService {
     checkIn: string;
     checkOut: string;
     specialRequest?: string;
+    paymentMethod: string;
+    paymentReference: string;
   }) {
     const checkIn = new Date(data.checkIn);
     const checkOut = new Date(data.checkOut);
@@ -49,6 +52,7 @@ export class BookingService {
     return prisma.booking.create({
       data: {
         roomId: data.roomId,
+        userId: data.userId || null,
         guestName: data.guestName,
         email: data.email,
         phone: data.phone,
@@ -58,6 +62,8 @@ export class BookingService {
         totalAmount,
         specialRequest: data.specialRequest,
         status: "pending",
+        paymentMethod: data.paymentMethod,
+        paymentReference: data.paymentReference,
       },
       include: {
         room: true,

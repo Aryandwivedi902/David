@@ -4,6 +4,7 @@ import { z } from "zod";
 
 const bookingInputSchema = z.object({
   roomId: z.string().uuid("Invalid suite ID specification."),
+  userId: z.string().uuid().optional().nullable(),
   guestName: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Valid email address format required."),
   phone: z.string().min(6, "Valid phone number format required."),
@@ -15,6 +16,8 @@ const bookingInputSchema = z.object({
     z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Check-out must be in YYYY-MM-DD format.")
   ),
   specialRequest: z.string().optional(),
+  paymentMethod: z.string().min(3, "Payment method is required."),
+  paymentReference: z.string().min(5, "Payment verification reference is required."),
 });
 
 export class BookingController {

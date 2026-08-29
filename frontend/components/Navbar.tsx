@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Compass } from "lucide-react";
+import { Menu, X, Compass, LogIn, LogOut, Calendar, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,6 +76,46 @@ export default function Navbar() {
               )}
             </Link>
           ))}
+
+          <div className="h-4 w-[1px] bg-white/10" />
+
+          {user ? (
+            <div className="flex items-center gap-6">
+              <span className="flex items-center gap-1.5 text-[10px] text-accent font-bold tracking-widest uppercase">
+                <User className="w-3.5 h-3.5" />
+                <span>{user.name.split(" ")[0]}</span>
+              </span>
+              <Link
+                href="/my-bookings"
+                className={`flex items-center gap-1.5 text-xs font-semibold tracking-widest transition-all duration-300 relative py-1 ${
+                  isActive("/my-bookings")
+                    ? "text-accent"
+                    : "text-gray-300 hover:text-white"
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>MY BOOKINGS</span>
+              </Link>
+              <button
+                onClick={logout}
+                className="flex items-center gap-1.5 text-xs font-semibold tracking-widest text-gray-300 hover:text-accent transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>SIGN OUT</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/login"
+                className="flex items-center gap-1.5 text-xs font-semibold tracking-widest text-gray-300 hover:text-accent transition-colors"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>LOGIN</span>
+              </Link>
+            </div>
+          )}
+
           <Link href="/booking">
             <button className="px-6 py-2 bg-gradient-gold text-navy-deep font-semibold text-xs tracking-widest rounded-none border border-accent hover:bg-transparent hover:text-white hover:border-white transition-all duration-500 gold-border-glow">
               BOOK YOUR STAY
@@ -112,6 +154,45 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
+
+              {user ? (
+                <>
+                  <div className="py-4 border-b border-white/5 flex items-center gap-2 text-sm font-semibold tracking-widest text-accent uppercase">
+                    <User className="w-4 h-4" />
+                    <span>{user.name}</span>
+                  </div>
+                  <Link
+                    href="/my-bookings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`py-4 border-b border-white/5 flex items-center gap-2 text-sm font-semibold tracking-widest transition-colors ${
+                      isActive("/my-bookings") ? "text-accent" : "text-gray-300 hover:text-white"
+                    }`}
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span>MY BOOKINGS</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="py-4 border-b border-white/5 flex items-center gap-2 text-sm font-semibold tracking-widest text-left text-gray-300 hover:text-accent transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>SIGN OUT</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-4 border-b border-white/5 flex items-center gap-2 text-sm font-semibold tracking-widest text-gray-300 hover:text-accent transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>LOGIN</span>
+                </Link>
+              )}
+
               <div className="pt-6 pb-4">
                 <Link href="/booking" onClick={() => setIsMobileMenuOpen(false)}>
                   <button className="w-full py-3 bg-gradient-gold text-navy-deep font-semibold text-xs tracking-widest border border-accent rounded-none">
@@ -126,3 +207,4 @@ export default function Navbar() {
     </header>
   );
 }
+

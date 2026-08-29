@@ -17,7 +17,7 @@ function RoomsListContent() {
   const [error, setError] = useState("");
 
   // Filters state
-  const [maxPrice, setMaxPrice] = useState<number>(3000);
+  const [maxPrice, setMaxPrice] = useState<number>(80000);
   const [capacity, setCapacity] = useState<string>("all");
   const [bedType, setBedType] = useState<string>("all");
 
@@ -131,13 +131,13 @@ function RoomsListContent() {
           <div className="space-y-4">
             <div className="flex justify-between text-xs font-semibold text-gray-400 tracking-wider">
               <span>MAX PRICE:</span>
-              <span className="text-accent">${maxPrice.toLocaleString()} / night</span>
+              <span className="text-accent">₹{maxPrice.toLocaleString()} / night</span>
             </div>
             <input
               type="range"
               min="0"
-              max="5000"
-              step="50"
+              max="100000"
+              step="1000"
               value={maxPrice}
               onChange={(e) => setMaxPrice(parseInt(e.target.value))}
               className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent"

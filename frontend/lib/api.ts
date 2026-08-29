@@ -33,19 +33,23 @@ export async function searchAvailability(checkIn: string, checkOut: string, gues
 }
 
 // 2. RESERVATION SYSTEM ENDPOINTS
-export async function createBooking(data: {
-  roomId: string;
-  guestName: string;
-  email: string;
-  phone: string;
-  guests: number;
-  checkIn: string;
-  checkOut: string;
-  specialRequest?: string;
-}) {
+export async function createBooking(
+  data: {
+    roomId: string;
+    userId?: string | null;
+    guestName: string;
+    email: string;
+    phone: string;
+    guests: number;
+    checkIn: string;
+    checkOut: string;
+    specialRequest?: string;
+  },
+  token?: string
+) {
   const res = await fetch(`${API_BASE_URL}/bookings`, {
     method: "POST",
-    headers: getHeaders(),
+    headers: getHeaders(token),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -185,5 +189,57 @@ export async function getAdminMessages(token: string) {
     headers: getHeaders(token),
   });
   if (!res.ok) throw new Error("Failed to fetch contact inquiries.");
+  return res.json();
+}
+
+// 6. USER AUTHENTICATION
+export async function signupUser(data: { name: string; email: string; passwordString: string }) {
+  const res = await fetch(`${API_BASE_URL}/users/signup`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      name: data.name,
+      email: data.email,
+      password: data.passwordString,
+    }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Registration failed.");
+  }
+  return res.json();
+}
+
+export async function loginUser(data: { email: string; passwordString: string }) {
+  const res = await fetch(`${API_BASE_URL}/users/login`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      email: data.email,
+      password: data.passwordString,
+    }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Invalid credentials.");
+  }
+  return res.json();
+}
+
+export async function getUserProfile(token: string) {
+  const res = await fetch(`${API_BASE_URL}/users/me`, {
+    method: "GET",
+    headers: getHeaders(token),
+  });
+  if (!res.ok) throw new Error("Unauthorized user session.");
+  return res.json();
+}
+
+export async function getUserBookings(token: string) {
+  const res = await fetch(`${API_BASE_URL}/users/bookings`, {
+    method: "GET",
+    headers: getHeaders(token),
+  });
+  if (!res.ok) throw new Error("Failed to fetch user bookings.");
   return res.json();
 }

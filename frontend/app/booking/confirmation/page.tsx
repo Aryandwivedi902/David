@@ -122,7 +122,7 @@ function ConfirmationContent() {
             </div>
             <div className="flex justify-between border-t border-white/5 pt-3 text-sm font-bold">
               <span className="text-white">TOTAL CHARGED:</span>
-              <span className="text-accent">${formattedAmount}</span>
+              <span className="text-accent">₹{formattedAmount}</span>
             </div>
           </>
         )}

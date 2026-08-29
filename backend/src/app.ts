@@ -10,6 +10,7 @@ import roomRoutes from "./routes/roomRoutes";
 import { bookingRoutes, adminBookingRoutes } from "./routes/bookingRoutes";
 import contactRoutes from "./routes/contactRoutes";
 import authRoutes from "./routes/authRoutes";
+import userRoutes from "./routes/userRoutes";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 // Mount Protected Admin API routes
 app.use("/api/admin/bookings", authenticateAdmin, adminBookingRoutes);
